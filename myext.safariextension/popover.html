@@ -1,0 +1,245 @@
+<html>
+<head>
+<link href="http://twitter.github.com/bootstrap/assets/css/bootstrap.css" rel="stylesheet">
+<link href="http://twitter.github.com/bootstrap/assets/css/bootstrap-responsive.css" rel="stylesheet">
+
+<script src="jquery-1.7.2.js"></script>
+
+<script src="oauth2/oauth2.js"></script>
+
+<title>Afterclassroom</title>
+</head>
+
+
+
+
+<script type="text/javascript" charset="utf-8">
+
+var globalCode =undefined;
+var globalToken = undefined;
+
+function popoverMyFunc(event){
+
+var myclient = new OAuth2('after', {
+  client_id: 'c7c97349e6ef49912d87fb762023c3b2958fc6f559f73927b3cd0262dd1c8bd5',
+  client_secret: 'd8ce0fc0ba134424d8aa6c73d19637c0e5a61a59364849eab1e93d9c811b9ebb',
+  api_scope: 'public'
+});
+
+myclient.authorize(function() {});
+
+
+}
+safari.application.addEventListener("popover", popoverMyFunc, true);
+
+
+
+
+function navigateHandler(event){
+  $('#loading').append('about to go...;;<br/>');
+}
+safari.application.addEventListener("open", navigateHandler, true);
+
+
+
+
+function waitForMessage(event){
+  safari.application.activeBrowserWindow.activeTab.close();
+
+  var messageData = event.message;
+
+
+  if( event.name === "heyExtensionBar" ) {
+    globalCode = messageData;
+    MyGetToken();
+
+  }
+
+}
+
+safari.application.activeBrowserWindow.addEventListener("message", waitForMessage,false);
+
+
+
+
+
+
+
+
+
+
+
+function MyGetToken(){
+
+	$.ajax({
+		  url: 'http://dev.afterclassroom.com/oauth/token',
+		  type: 'POST',
+		  data: {
+				code: globalCode,
+				client_id: 'c7c97349e6ef49912d87fb762023c3b2958fc6f559f73927b3cd0262dd1c8bd5',
+				client_secret: 'd8ce0fc0ba134424d8aa6c73d19637c0e5a61a59364849eab1e93d9c811b9ebb',
+				api_scope: 'public',
+				redirect_uri: 'http://dev.afterclassroom.com/robots.txt',
+				grant_type: 'authorization_code'
+		  },
+		  success: function(data, textStatus, jqXHR){
+
+			var obj = jQuery.parseJSON(jqXHR.responseText);
+
+			globalToken = obj.access_token;
+			GetMe();
+		  },
+		  error: function(xhr, ajaxOptions, thrownError){
+			alert(xhr.status);
+            alert(thrownError);
+		  }
+	});
+
+}
+
+function GetMe(){
+
+	callApi('getMe', 'http://dev.afterclassroom.com/api/users/me', 'GET', '');
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+function callApi(action, path, method, params) {
+    // Make an XHR that creates the task
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function(event) {
+      if (xhr.readyState == 4) {
+        if(xhr.status == 200) {
+          // Great success: parse response with JSON
+		  //results = JSON.parse( xhr.responseText );
+		  results = xhr.responseText;
+		  str_f = action + '(results)';
+		  eval(str_f);
+        } else {
+          // Request failure: something bad happened
+
+        }
+      }
+    };
+
+    xhr.open(method, path, true);
+
+	xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+    xhr.setRequestHeader('Content-length', params.length);
+    xhr.setRequestHeader('Connection', 'close');
+
+    xhr.setRequestHeader('Authorization', 'Bearer ' + globalToken);
+    xhr.send(params);
+  };
+
+  function getMe(results){
+
+  }
+
+
+
+
+
+
+
+
+
+
+
+</script>
+
+
+<body>
+	<div class="container">
+		<div id="loading" style="">
+			Loading ...
+		</div>
+    <div class="row-fluid" id="form_tick" style="display: none;">
+        <div class="container" style="width: 520px;height: 570px;">
+            <div class="con-ticks" style="padding:5px 15px">
+                <div class="row-fluid">
+                    <div class="span6" style="width: 237px;float:left">
+                        <h2>Tick</h2>
+                    </div>
+                    <div class="span6" style="width: 237px;float:left">
+                        <div class="pull-right" style="margin-top: 10px">
+                            <a href="http://afterclassroom.com" id="linkto_classroom">afterclassroom.com</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="row-fluid" style="margin-top: 10px;">
+                    <input type="text" name="title" placeholder="Title" class="span" style="width: 487px" id="title">
+                </div>
+                <div class="row-fluid">
+                    <p><a href="" id="link"></a></p>
+                </div>
+                <div class="row-fluid embed-container" style="height: 270px;width: 487px" id="description">
+					<img src="/images/loading.gif" style="padding: 127px 215px;"></img>
+                </div>
+                <div class="row-fluid" style="margin-top: 10px">
+                    <input type="text" class="span" style="width: 487px" id="tags" value="" data-placeholder="Select some tags, or create a new tag by pressing enter.">
+                </div>
+                <div class="row-fluid" style="margin-top: 10px">
+                    <div class="span6" style="width: 385px;float:left">
+                        <div class="input-append" style="position: relative">
+                            <input type="text" placeholder="Select classrooms" class="span10 click-ctick" style="width: 338px; float:left">
+                            <button type="button" class="btn click-ctick" style="padding: 11px">
+                                <span class="caret" style="margin-top: 0px"></span>
+                            </button>
+                            <div id="tick_to_click" style="display:none">
+                                <ul class="dropdown-menu" style="display:block;overflow: auto;height: 90px; width: 368px" id="cl_list">
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="span6" style="width: 102px;float:left">
+                        <div class="pull-right">
+                            <button class="btn" style="padding: 4px 25px" id="send_bt" disabled data-loading-text="Sending..." data-complete-text="Finished!">Send</button>
+                        </div>
+                    </div>
+                </div>
+                <p></p>
+                <div class="row-fluid">
+                    <div class="span6" style="width: 237px;float:left">
+                        <span style="float: left;margin-right: 10px">
+                            <img src="" style="height: 50px;width: 50px;border-radius:6px" class="userImage">
+                        </span>
+                        <p style="margin-top: 35px" class="userName"></p>
+                    </div>
+                    <div class="span6" style="width: 237px;float:left">
+                        <div class="pull-right">
+                            <a href="" class="myTick">My Ticks</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div><!--/span-->
+    </div><!--/row-->
+</div>
+
+<!--Modal-->
+<div class="modal hide" id="alertModal">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal">×</button>
+    <h3>Alert</h3>
+  </div>
+  <div class="modal-body">
+    <p>Select classrooms</p>
+  </div>
+  <div class="modal-footer">
+    <a href="#" class="btn" data-dismiss="modal">Close</a>
+  </div>
+</div>
+<!--Modal-->
+</body>
+</html>
